@@ -140,7 +140,6 @@ export default {
                     return false;
                 }
             }
-            console.log(777777)
             if(this.formItem.password!=this.password1){
                     this.$Message.error("两次密码输入不一致！");
                     return false;

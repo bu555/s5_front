@@ -9,6 +9,23 @@ import VueResource from 'vue-resource'
 import 'iview/dist/styles/iview.css';
 import echarts from 'echarts';
 import StorageConfig from './js/localStorage';
+
+// import { Button, Table,RadioGroup,DatePicker,Radio,Input,Menu,MenuItem,Select,Option,ButtonGroup,FormItem,Tabs,TabPane,Form } from 'iview';
+// Vue.component('Button', Button);
+// Vue.component('Table', Table);
+// Vue.component('RadioGroup', RadioGroup);
+// Vue.component('DatePicker', DatePicker);
+// Vue.component('Radio', Radio);
+// Vue.component('Input', Input);
+// Vue.component('Menu', Menu);
+// Vue.component('MenuItem',MenuItem);
+// Vue.component('Select',Select);
+// Vue.component('Option',Option);
+// Vue.component('ButtonGroup',ButtonGroup);
+// Vue.component('TabPane',TabPane);
+// Vue.component('Tabs',Tabs);
+// Vue.component('FormItem',FormItem);
+// Vue.component('Form',Form);
 // import userConfig from './js/user_config.js'
 // import '../my-theme/index.less';
 Vue.config.productionTip = false
@@ -22,22 +39,24 @@ Vue.prototype.setConfig = function(obj){
     this.$store.commit('setConfig',obj);
     //设置本地配置
     this.StorageConfig.set(obj);
-    // 设置服务器端
-    // if(window.sessionStorage.getItem('token')){
-    //   this.$http.post(apiPath+'/api/bz/setConfig',obj,{emulateJSON:true}).then(res=>{
-    //     if(res.body.code==-5){
-    //       this.$Modal.warning({
-    //         title: '提示',
-    //         content: '<p>会话已过期，请重新登陆！</p>',
-    //         onOk: () => {
-    //         }
-    //       });
-    //     }else if(res.body.code==0){
-    //       this.$Message.success("设置成功！");
-    //     }
-    //   })
-    // }
 }
+//切换路由
+Vue.prototype.routerHandle = function(routerName){
+  if(routerName.indexOf("baziSet")!=-1){
+      this.$router.push({name:'baziSet'});
+  }else{
+      this.$router.push({name:routerName});
+  }
+  this.$store.commit('setActiveName', { name: routerName });
+  localStorage.setItem('activeName',routerName);
+},
+//日期格式化
+Vue.prototype.formatDate = function(dateObj){
+  return dateObj.getFullYear()+"-"+trans(this.dateObj.getMonth()+1)+"-"+trans(this.dateObj.getDate())+" "+trans(this.dateObj.getHours())+":"+trans(this.dateObj.getMinutes())+":"+trans(this.dateObj.getSeconds());
+  function trans(num){
+    return num<10?'0'+num:num+''
+  }
+},
 
 Vue.http.interceptors.push(function(request,next){
   //发送前处理逻辑
@@ -85,6 +104,7 @@ Vue.http.interceptors.push(function(request,next){
 // }; //设置跨域时是否发送凭证
 
 Vue.prototype.$echarts = echarts;
+
 
 Vue.filter('num2',function(v){
   return v<10? "0"+v : v;

@@ -5,6 +5,7 @@
                 <Input v-model="searchValue" placeholder="请输入关键字..." @on-change="changeHandle" style="width:180px;height:32px"></Input>
                 <Button type="primary" icon="ios-search" @click="searchBtn(searchValue)">查 找</Button>
                 <Button type="error" style="margin-left:7px" @click="delBtn"><Icon type="ios-trash"></Icon> 删 除</Button>
+                <Button style="margin-left:7px" @click="paipanBtn"> 去paipan <Icon type="ios-shuffle-strong"></Icon></Button>
                 <!-- 删除弹窗 -->
                 <!-- <Button @click="modal5 = true">Set the width</Button> -->
                 <Modal v-model="modal5" width="300" @on-ok="delData" >
@@ -59,6 +60,8 @@ export default {
             {
                 title: '性别',
                 key: 'sex',
+                width: 78,
+                align: 'center'
             },
             {
                 // title: '生辰',
@@ -69,10 +72,6 @@ export default {
                 // title: '生辰',
                 title: 'lunarCH',
                 key: 'lunarCH'
-            },
-            {
-                title: 'Time',
-                key: 'time'
             },
             {
                 // title: '生日提醒',
@@ -130,9 +129,10 @@ export default {
                     content: '<p>需要登录后才能对数据存储、查看或修改！</p>',
                     onOk: () => {
                         //切换到paipan
-                        this.$router.push({name:'baziPaipan'});
-                        this.$store.commit('setActiveName', { name: 'baziPaipan' });
-                        localStorage.setItem('activeName','baziPaipan');
+                        this.routerHandle('baziCalendar');
+                        // this.$router.push({name:'baziPaipan'});
+                        // this.$store.commit('setActiveName', { name: 'baziPaipan' });
+                        // localStorage.setItem('activeName','baziPaipan');
                     }
                 });
             }
@@ -141,6 +141,9 @@ export default {
                 // headers:{"token5":sessionStorage.getItem('token')}
                 }).then(res=>{
                 if(res.body.code==0){
+                    res.body.data.list.forEach((v,i)=>{
+                        v.sex = v.sex=='1'?'男':'女';
+                    });
                     this.data1 = res.body.data.list;
                     this.pageTotal = res.body.data.count; //总页数
                     this.itemTotal = res.body.data.total; //总条数
@@ -154,9 +157,34 @@ export default {
             if(this.selectItem.length>0){
                 this.modal5 = true; //显示弹窗
             }else{
-                this.warning("请至少选择一条信息！")
+                this.warning("请至少选择一条数据！")
                 return false;
             }
+        },
+        //点击排盘按钮
+        paipanBtn(){
+            if(this.selectItem.length<1){
+                this.warning("请先选择一条数据！")
+                return false;
+            }else if(this.selectItem.length>1){
+                this.warning("只允许选择一条数据！")
+                return false;
+            }
+            let sex = this.selectItem[0].sex==='男'?'1':'0';
+            let dateStr = this.selectItem[0].solar;
+            if(!(/^\d{4}(-\d{1,2}){2}\s\d{1,2}(:\d{1,2}){2}$/.test(dateStr))){
+                console.log('dateStr格式错误');
+                return;
+            }
+            //先设置默认查询值
+            sessionStorage.setItem('sex',sex); //性别设置
+            sessionStorage.setItem('isLunar','1'); //设为阳历
+            sessionStorage.setItem('dateStr',dateStr); //日期串
+            sessionStorage.setItem('name',this.selectItem[0].name); //名字
+            //跳转
+            sessionStorage.setItem('origin','router'); //声明跳转身份
+            this.routerHandle('baziPaipan'); //跳到paipan页面
+            
         },
         //删除数据
         delData(){
@@ -182,7 +210,6 @@ export default {
         },
         //分页器改变
         pageChange(page){
-            console.log(this.currentPage);
             if(this.prevKeyword){
                 this.selectItem = [];//清空被选择的
                 this.searchBtn(this.prevKeyword,page);

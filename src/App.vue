@@ -22,54 +22,47 @@
             </div>
         </Menu> -->
         <Menu mode="horizontal" active-name="1" class="menu-hor" :style="'background-color:'+$store.state.config.theme+'.5)'">
-            <Row>
-                <Col span="9">
-                    <div class="left">
-                        <div class="logo">
-                        </div>
-                        <!-- <h3 class="title1">tuteng</h3> -->
-                        <!-- <h3 class="title1">shefu</h3> -->
-                        <h3 class="title1">shifen</h3>
-                    </div>
-                </Col>
-                <Col span="8">
-                    <div class="middle">
-                        <div class="layout-assistant">
-                            <!-- <MenuItem name="1">BAZI</MenuItem>
-                            <MenuItem name="2">MBTI</MenuItem>
-                            <MenuItem name="4">日 历</MenuItem>
-                            <MenuItem name="5">星 座</MenuItem>
-                            <MenuItem name="3">同月同日</MenuItem>
-                            <MenuItem name="6">历史今日</MenuItem> -->
-                            <a href="javascript:;" @click="randomC">changeC</a>
-                        </div>
-                    </div>
-                </Col>
-                <Col span="7">
-                    <div class="right" style="background:yellow">
-                        <div class="user-control" v-if="!logined">
-                            <a href="javascript:;" @click="tab='login';showLogin=true;">登录</a>&nbsp;&nbsp;&nbsp;&nbsp;
-                            <a href="javascript:;" @click="tab='register';showLogin=true;">注册</a>
-                        </div>
-                        <div class="user-control" v-if="logined">
-                            <Dropdown  @on-click="dropdownSelect($event)">
-                                <a href="javascript:void(0)">
-                                    {{userName}}
-                                    <Icon type="arrow-down-b"></Icon>
-                                </a>
-                                <DropdownMenu slot="list">
-                                    <DropdownItem name="exit">退出</DropdownItem>
-                                    <!-- <DropdownItem>炸酱面</DropdownItem>
-                                    <DropdownItem disabled>豆汁儿</DropdownItem>
-                                    <DropdownItem>冰糖葫芦</DropdownItem>
-                                    <DropdownItem divided>北京烤鸭</DropdownItem> -->
-                                </DropdownMenu>
-                            </Dropdown>
-                        </div>
-                        <v-login class="login" @getStatus="receive" v-if="showLogin" :tabNam = "tab"></v-login>
-                    </div>
-                </Col>
-            </Row>
+            <div class="left">
+                <div class="logo">
+                </div>
+                <!-- <h3 class="title1">tuteng</h3> -->
+                <!-- <h3 class="title1">shefu</h3> -->
+                <h3 class="title1">shifen</h3>
+            </div>
+            <div class="middle">
+                <div class="layout-assistant">
+                    <!-- <MenuItem name="1">BAZI</MenuItem>
+                    <MenuItem name="2">MBTI</MenuItem>
+                    <MenuItem name="4">日 历</MenuItem>
+                    <MenuItem name="5">星 座</MenuItem>
+                    <MenuItem name="3">同月同日</MenuItem>
+                    <MenuItem name="6">历史今日</MenuItem> -->
+                    <a href="javascript:;" @click="randomC">changeC</a>
+                </div>
+            </div>
+            <div class="right">
+                <div class="user-control" v-if="!logined">
+                    <a href="javascript:;" @click="tab='login';showLogin=true;">登录</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                    <a href="javascript:;" @click="tab='register';showLogin=true;">注册</a>
+                </div>
+                <div class="user-control" v-if="logined">
+                    <Dropdown  @on-click="dropdownSelect($event)">
+                        <a href="javascript:void(0)">
+                            {{userName}}
+                            <Icon type="arrow-down-b"></Icon>
+                        </a>
+                        <DropdownMenu slot="list">
+                            <DropdownItem name="exit">退出</DropdownItem>
+                            <!-- <DropdownItem>炸酱面</DropdownItem>
+                            <DropdownItem disabled>豆汁儿</DropdownItem>
+                            <DropdownItem>冰糖葫芦</DropdownItem>
+                            <DropdownItem divided>北京烤鸭</DropdownItem> -->
+                        </DropdownMenu>
+                    </Dropdown>
+                </div>
+                <v-login class="login" @getStatus="receive" v-if="showLogin" :tabNam = "tab"></v-login>
+            </div>
+
         </Menu>
         <div class="layout-content">
             <router-view></router-view>
@@ -96,7 +89,6 @@
             randomC(){
                 let c = `rgba(${getRandom(0,256)},${getRandom(0,256)},${getRandom(0,256)},`
                 this.setConfig({'theme':c});
-                console.log(c)
                 function getRandom(min,max){
                     let random = min + Math.floor((max-min)*Math.random());
                     if(random<100){
@@ -177,12 +169,10 @@
             'v-login':login
         },
         created(){
-            this.initConfig();
+            // this.initConfig();
             //每次载入先判定是否登录,且验证token是否过期
             if(window.sessionStorage.getItem('token')){
-
                 this.$http.get(apiPath+'/api/bz/getConfig',).then(res=>{
-                    console.log(res)
                             if(res.body.code==0){
                                 this.logined = true;
                                 this.userName = window.sessionStorage.getItem('userName')
@@ -209,6 +199,8 @@
         height:56px;
         .left {
             // height: 60px;
+            float:left;
+            width:220px;
                 .title1 {
                     // color:#faf8fe;
                     color:#d7d0b7;
@@ -227,11 +219,15 @@
                 }
         }
         .middle {
+            float:left;
             .layout-assistant{
                 height: inherit;
             }
         }
         .right {
+            float:right;
+            width:200px;
+            padding-right:50px;
             .user-control {
                 color:#ccc;
                 padding-right:7%;

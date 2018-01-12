@@ -1,6 +1,5 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import HelloWorld from '@/components/HelloWorld'
 import Bazi from '@/components/Bazi/bazi_main.vue'
 import BaziCalendar from '@/components/Bazi/bazi_calendar.vue'
 import BaziPaipan from '@/components/Bazi/bazi_paipan.vue'
@@ -13,9 +12,7 @@ Vue.use(Router)
 export default new Router({
   routes: [
     {
-      path: '/',
-      name: 'HelloWorld',
-      component: HelloWorld
+      path: '/',redirect:'/bazi'
     },
     {
       path: '/bazi',

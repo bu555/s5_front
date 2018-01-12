@@ -10,7 +10,7 @@
                     <span slot="open">闰月</span>
                     <span slot="close">平月</span>
                 </i-switch>
-                <TimePicker type="time" v-model="timeObj" placeholder="选择时间" style="width: 15%" data-active="date" :editable="false"></TimePicker>
+                <TimePicker type="time" v-model="dateObj" placeholder="选择时间" style="width: 15%" data-active="date" :editable="false"></TimePicker>
                 <RadioGroup v-model="sex" style="margin:0 8px">
                     <Radio label="1">男</Radio>
                     <Radio label="0">女</Radio>
@@ -49,7 +49,7 @@ export default {
     return {
         // timeDate:new Date('2002-6-5 12:00:00'),
         dateObj:sessionStorage.getItem('dateStr')?new Date(sessionStorage.getItem('dateStr')):new Date(),
-        timeObj:sessionStorage.getItem('dateStr')?new Date(sessionStorage.getItem('dateStr')):new Date(),
+        // timeObj:sessionStorage.getItem('dateStr')?new Date(sessionStorage.getItem('dateStr')):new Date(),
         sex: sessionStorage.getItem('sex')?sessionStorage.getItem('sex'):'1', //1男，0女
         dateStr:'', //日期 2002-02-02
         timeStr:'12:00:00', //时间 12:02:02
@@ -70,58 +70,64 @@ export default {
   methods: {
     saveBazi(){
         if(!sessionStorage.getItem('token')){
-                    // this.$Modal.warning({
-                    //     title: "提示",
-                    //     content: "需要登录后才能对数据存储、查看或修改！"
-                    // });
             this.$Modal.warning({
                 title: '提示',
                 content: '<p>需要登录后才能对数据存储、查看或修改！</p>',
                 onOk: () => {
-                    this.$router.push({path:'/bazi/paipan'});
-                    this.$store.commit('setActiveName', { name: 'baziPaipan' });
+                    //返回panpan页
+                    // this.routerHandle('baziPaipan');
+                    // this.$router.push({path:'/bazi/paipan'});
+                    // this.$store.commit('setActiveName', { name: 'baziPaipan' });
                     // localStorage.setItem('activeName','baziPaipan');
                 }
             });
         }else{
+            let dateStr = this.formatDate(this.dateObj);//格式化日期
             let userInfo = {
                 name:this.nameValue||['斯大林','螺蛳粉','罗斯福','丘吉尔','希特勒','张伯伦','罗斯福'][Math.floor(Math.random()*10)%7] + Math.random().toString().substr(5,2) ,
                 sex:this.sex,
-                solar:this.dateStr,
-                time:this.timeStr,
-                lunarCH:this.baziInfo.lunarInfo.monthCH+" "+this.baziInfo.lunarInfo.dayCH,
-                lunar:this.baziInfo.lunarInfo.month+" "+this.baziInfo.lunarInfo.day,
+                solar:this.baziInfo.lunarInfo.solar,
+                lunarCH:this.baziInfo.lunarInfo.lunarCH,
+                lunar:this.baziInfo.lunarInfo.lunar,
                 isRemind:true //是否提醒
             }
             this.$http.post(apiPath+"/api/bz/add",userInfo,{emulateJSON:true}).then(res=>{
-
+                if(res.body.code=='0'){
+                    this.success('保存成功！');
+                }
             },res=>{
                 // this.warning("连接异常！");
             });
         }
     },
     queryBazi(){
-        if(!this.dateObj || !this.timeObj){
+        // if(!this.dateObj || !this.timeObj){
+        if(!this.dateObj){
             this.warning("请将关键信息填写完整！");
             return false;
+        }else if(this.dateObj.getFullYear()<1891||this.dateObj.getFullYear()>2100){
+            this.warning("超出查询范围(1891-2100年)");
+            return;
         }
-        let dateStr = this.dateObj.getFullYear()+"-"+(this.dateObj.getMonth()+1)+"-"+this.dateObj.getDate()+" "+this.timeObj.getHours()+":"+this.timeObj.getMinutes()+":00";
+        let dateStr = this.dateObj.getFullYear()+"-"+(this.dateObj.getMonth()+1)+"-"+this.dateObj.getDate()+" "+this.dateObj.getHours()+":"+this.dateObj.getMinutes()+":"+this.dateObj.getSeconds();
         sessionStorage.setItem('dateStr',dateStr);
         this.$http.post(apiPath+"/api/bz/calc",{
             year:this.dateObj.getFullYear(),
             month:this.dateObj.getMonth()+1,
             day:this.dateObj.getDate(),
-            hour:this.timeObj.getHours(),
-            minute:this.timeObj.getMinutes(),
+            hour:this.dateObj.getHours(),
+            minute:this.dateObj.getMinutes(),
+            second:this.dateObj.getSeconds(),
             sex:this.sex,
-            isLeap:this.isLeap?'1':'0',
+            isLeap:this.isLeap?'1':'0', 
             isLunar:this.isLunar,
             isAuto23:this.isAuto23
             },{emulateJSON:true}).then(res=>{
-                console.log(res.body.data);
             if(res.body.code==0){
-                this.bzViewShow = true;
                 this.baziInfo = res.body.data;
+                this.bzViewShow = true;
+                console.log(this.baziInfo);
+                //数据暂存本地
                 sessionStorage.setItem('baziInfo',JSON.stringify(res.body.data));
             }else{
                 this.warning (res.body.msg)
@@ -156,6 +162,9 @@ export default {
     warning (msg) {
         this.$Message.warning(msg);
     },
+    success (msg) {
+        this.$Message.success(msg);
+    },
   },
   mounted() {
       this.setInputStyle(); //日期框蓝色边框
@@ -165,9 +174,11 @@ export default {
       'isLeap':function(){sessionStorage.setItem('isLeap',Number(this.isLeap))},
   },
   created(){
-        this.showLeapY = this.isLunar==='0'?true:false;
-        console.log(JSON.parse(sessionStorage.getItem('baziInfo')))
-        if(sessionStorage.getItem('baziInfo')){
+        this.showLeapY = this.isLunar==='0'?true:false; //控制闰月按钮显示
+        if(sessionStorage.getItem('origin','router')){ //判断是否从其他路由跳过来paipan
+            sessionStorage.setItem('origin','');//抹除origin数据
+            this.queryBazi();
+        }else if(sessionStorage.getItem('baziInfo')){ //上一次搜索的数据，有的话就使用
             this.baziInfo = JSON.parse(sessionStorage.getItem('baziInfo'));
             this.bzViewShow = true;
         }
@@ -188,36 +199,18 @@ export default {
     .bazi-show-box {
         // background-color: red;
         .bazi-view {
-            width:472px;
+            width:442px;
             min-height: 400px;
             background-color: yellow;
             float:left;
         }
         .bazi-chart {
-            padding-left:482px;
+            padding-left:462px;
             // background-color: pink;
             width:100%;
             min-height:400px;
             // float:left;
         }
     }
-    // .setItem {
-    //     margin-left:19%;
-    //     li{
-    //         height: 40px;
-    //         font-size:14px;
-    //         position: relative;
-    //         span.info {
-    //             position: absolute;
-    //             left: 16%;
-    //             bottom:5px;
-    //             font-size:11px;
-    //             color:#cccccc;
-    //         }
-    //     }
-    // }
-    // li.ivu-menu-item {
-    //     padding-right:0px;
-    // }
 }
 </style>

@@ -32,13 +32,11 @@ export default {
         }
         let temp = this.$store.state.wxPower.WXPower;
         for(let key in temp){
-            if(temp[key]!=0){
               dataArr.push({
                 value:temp[key],
                 name:key
               });
               colorArr.push(COLOR[key]);
-            }
         }
         for(let key in this.$store.state.activeDaYun){
             if(this.$store.state.activeDaYun[key]!=0){
@@ -51,11 +49,11 @@ export default {
         }
         for(let key in this.$store.state.activeLiuNian){
             if(this.$store.state.activeLiuNian[key]!=0){
-              dataArr2.push({
-                value:this.$store.state.activeLiuNian[key],
-                name:key
-              });
-              colorArr2.push(COLOR[key]);
+                dataArr2.push({
+                    value:this.$store.state.activeLiuNian[key],
+                    name:key
+                });
+                colorArr2.push(COLOR[key]);
             }
         }
         // 绘制图表

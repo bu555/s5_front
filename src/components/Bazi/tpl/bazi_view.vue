@@ -1,8 +1,8 @@
 <template> 
     <div class="bz-view" >
         <div class="detail" style="background:#fff">
-            <div>基本信息：张三 公元1980-8-8 12:00:00 壬申年十月初四 </div>
-            <div>起运时间：1980-8-8 12:00:00 壬申年十月初四 </div>
+            <div>姓名：{{this.name?this.name:'佚名'}}<span style="padding-left:36px">起运时间：{{this.bzInfo.other.qiyunTime}}</span> </div>
+            <div>生辰：{{this.bzInfo.lunarInfo.solar}}(阳历)<span style="padding-left:15px">{{this.bzInfo.lunarInfo.lunarCH}}(阴历)</span></div>
         </div>
         <div class="sizhu gan">
             <div></div>
@@ -78,6 +78,8 @@ export default {
       sex:0,
       isLunarLeap:'false', //如果是农历输入 闰&平
       // wxPower:{},
+      tes:0,
+      name:''
     };
   },
   props:['bzInfo'],
@@ -85,6 +87,9 @@ export default {
   methods: {
     //新日期后点击确定按钮
     confirmBtn(){
+      if(!sessionStorage.getItem('name')){
+        this.name = ''; //如果本地没存'name',将值清空
+      }
       this.calcLiuNianArr(new Date().getFullYear()); //计算当前年份所属流年
       var _this = this;
       this.$store.commit('setWxPower',wxHandle(this.bzInfo.sizhu));
@@ -101,7 +106,7 @@ export default {
         },7);
     },
     //点击或改变流年  更新动态流年，并且将当前流年标红色
-    changeLiunian(year,isEmpty){
+    changeLiunian(year,isEmpty){ 
       if(isEmpty) return;
       var _this = this;
         this.liunianActiveObj.liunian.forEach(function(v,i){
@@ -179,7 +184,7 @@ export default {
             }
         });
         this.activeDaYun = this.liunianActiveObj.dayun;
-        this.getShiShen(); //更新大运柱流年柱
+        this.getShiShen(); //更新大运柱、流年柱
         setTimeout(function(){ //休眠，待数据渲染到页面后执行
           _this.setBzColor();
         },22)
@@ -256,8 +261,7 @@ export default {
             (this.dyZhi.canggan.split("")).forEach(function(v,i){
                 _this.dyZhi.shishen += BZ.calcShiShen(v,ry);
             })
-        }
-        
+        }   
     },
     // 设置八字的颜色
     setBzColor(){
@@ -282,37 +286,33 @@ export default {
             }
         }
     },
-    
   },
   watch:{
       'bzInfo':'confirmBtn',
-      'activeLiuNian':function(){this.$store.commit("setActiveLiuNian",getZhuPower(this.activeLiuNian))},
+      //监测liunian变动
+      'activeLiuNian':function(){
+          this.$store.commit("setActiveLiuNian",getZhuPower(this.activeLiuNian))
+      },
+      //监测dayun变动
       'activeDaYun':function(){
-        console.log(this.activeDaYun)
-        this.$store.commit("setActiveDaYun",getZhuPower(this.activeDaYun))}
+          this.$store.commit("setActiveDaYun",getZhuPower(this.activeDaYun))
+      },
   },
   mounted() {
-        // this.confirmBtn();
+    // this.confirmBtn();
     //初始挂载完后标红色
     this.activeRed();
   },
   created() {
-      console.log("this.bzInfo",this.bzInfo);
       this.$store.commit('setWxPower',wxHandle(this.bzInfo.sizhu));
-    // //初始给时间赋值（当前日期）
-    var nowDate = new Date();
-    // // this.year = nowDate.getFullYear();
-    // this.year = 2017;
-    // this.month = 2;
-    // this.day = 2;
-    // this.hour = 22;
-    // // this.month = nowDate.getMonth() + 1;
-    // // this.day = nowDate.getDate();
-    // // this.hour = nowDate.getHours();
-    // this.sex = 1;
-    // this.calc(); //计算出bzInfo
-
-    this.calcLiuNianArr(nowDate.getFullYear()); //计算出当前年份所属流年组
+      //根据存储session的name判定是否是列表页跳转过来
+      if(sessionStorage.getItem('name')){
+        this.name = sessionStorage.getItem('name');
+        sessionStorage.setItem('name',''); //抹去名字
+      }
+      //渲染dom前先获取到包含当前年份的流年数组
+      var nowDate = new Date();
+      this.calcLiuNianArr(nowDate.getFullYear()); //计算出当前年份所属流年数组
   }
 };
 </script>
@@ -324,8 +324,9 @@ export default {
     padding:12px;
     div.detail {
       margin:-10px -10px 10px -10px;
-      font-size:14px;
-      padding:4px;
+      font-size:13px;
+      padding:4px 8px;
+      color:	#888888;
     }
     div.sizhu {
         display: -webkit-flex; /* Safari */
@@ -339,7 +340,7 @@ export default {
             span { /* 十神 */
                 position: absolute;
                 top: 1%;
-                right: 30%;
+                right: 24%;
                 font-size: 10px;
                 width: 16px;
                 line-height: 14px;
@@ -403,7 +404,8 @@ export default {
             border-radius:3px;
             &:hover{
                 cursor:pointer;
-                border-color: #fb5bf2;
+                border-color: red;
+                box-shadow: 0px 0px 2px orange;
             }
           }
         }
@@ -426,8 +428,9 @@ export default {
           font-size:14px;
           border: none;
           &:hover {
-            border: none;
-            cursor:default	;
+            border: none !important;
+            cursor:default !important;
+            box-shadow:none !important;
           }
         }
     }
@@ -443,7 +446,9 @@ export default {
     }
     // active color 激活颜色
     .active-red {
-      color: #fb03f1;
+      color: #fe3000;
+      // text-shadow: 0px 0px 1px orange;
+      font-weight:700 !important;
     }
     //十神文字颜色
     .ss-text {
